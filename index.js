@@ -1,5 +1,6 @@
 var x = require("xule"),
-    g = x.logic;
+    g = x.logic,
+    a = require("./microphone");
 
 function r(min, max) {
     return Math.round(min + Math.random() * (max-min));
@@ -12,13 +13,12 @@ x.game(document.body, {
         var ctrl = this;
 
         ctrl.camera = g.pos(g.euler({aspect : window.innerWidth / window.innerHeight, speed : .5 }));
-
     },
-    step : function(ctrl) {
-
+    fixedStep : function(ctrl) {
+        console.log(a.analyze());
     },
     // stepLocal, stepRemote
-    fixedStep : function(ctrl) {
+    step : function(ctrl, delta) {
         var pos = g.pos({});
 
         if(x.key("W")) {
@@ -34,8 +34,8 @@ x.game(document.body, {
             pos.x += ctrl.camera.speed;
         }
 
-        g.translateOnAxis(ctrl.camera, g.axisZ, pos.z);
-        g.translateOnAxis(ctrl.camera, g.axisX, pos.x);
+        pos.z && g.translateOnAxis(ctrl.camera, g.axisZ, pos.z);
+        pos.x && g.translateOnAxis(ctrl.camera, g.axisX, pos.x);
 
         if(x.key("Q")) {
             ctrl.camera.ry += .01;
