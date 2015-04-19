@@ -1,12 +1,13 @@
 var x = require("xule"),
     g = x.logic,
-    a = require("./microphone");
+    a = require("./game/microphone"),
+    map = require("./game/map");
 
 function r(min, max) {
     return Math.round(min + Math.random() * (max-min));
 }
 
-function makeBox(cam) {
+function makeBox(player) {
     // copy the position and rotation from cam
     var box = g.copy([ g.defs.vector, g.defs.euler ], {
         geometry : {
@@ -20,7 +21,7 @@ function makeBox(cam) {
             color: 0xFF0000
         },
         ttl : 4000
-    }, cam);
+    }, player);
 
     // move it forward one!
     g.translateOnAxis(box, g.axisZ, -2);
@@ -36,31 +37,40 @@ x.xule(document.body, {
     controller : function() {
         var ctrl = this;
 
-        ctrl.camera = g.pos(g.euler({aspect : window.innerWidth / window.innerHeight, speed : .5 }));
+        ctrl.map = map(25, 25);
         ctrl.boxes = [];
+
+        ctrl.camera = {
+            y : 30,
+            rx : -90 * Math.PI/180,
+            aspect : window.innerWidth / window.innerHeight
+        };
+
+        ctrl.player = g.euler(g.pos({ speed : .5 }));
 
         ctrl.pos = g.pos();
         ctrl.controls = {
-            W : g.fn(addAssign, "z", ctrl.pos, -ctrl.camera.speed),
-            A : g.fn(addAssign, "x", ctrl.pos, -ctrl.camera.speed),
-            S : g.fn(addAssign, "z", ctrl.pos, ctrl.camera.speed),
-            D : g.fn(addAssign, "x", ctrl.pos, ctrl.camera.speed),
-            Q : g.fn(addAssign, "ry", ctrl.camera, .05),
-            E : g.fn(addAssign, "ry", ctrl.camera, -.05)
+            W : g.fn(addAssign, "z", ctrl.pos, -ctrl.player.speed),
+            A : g.fn(addAssign, "x", ctrl.pos, -ctrl.player.speed),
+            S : g.fn(addAssign, "z", ctrl.pos, ctrl.player.speed),
+            D : g.fn(addAssign, "x", ctrl.pos, ctrl.player.speed),
+            Q : g.fn(addAssign, "ry", ctrl.player, .05),
+            E : g.fn(addAssign, "ry", ctrl.player, -.05)
         };
     },
     fixedStep : function(ctrl) {
         if(a.analyse()) {
-            ctrl.boxes.push(makeBox(ctrl.camera));
+            ctrl.boxes.push(makeBox(ctrl.player));
         }
     },
     step : function(ctrl, delta) {
         // negate ctrl.pos
         ctrl.pos = g.copy(g.defs.vector, ctrl.pos, g.defs.vector);
+
         g.doKey(ctrl.controls);
 
-        ctrl.pos.z && g.translateOnAxis(ctrl.camera, g.axisZ, ctrl.pos.z);
-        ctrl.pos.x && g.translateOnAxis(ctrl.camera, g.axisX, ctrl.pos.x);
+        ctrl.pos.z && g.translateOnAxis(ctrl.player, g.axisZ, ctrl.pos.z);
+        ctrl.pos.x && g.translateOnAxis(ctrl.player, g.axisX, ctrl.pos.x);
 
         ctrl.boxes = ctrl.boxes.filter(function(box) {
             box.ttl -= delta;
@@ -72,28 +82,29 @@ x.xule(document.body, {
     render : function(ctrl) {
         // map changes from data back
         return x("object", [
-            x("camera", ctrl.camera),
-            x("light.point", {
-                x : 5,
-                y : 10
-            }),
+            x("object", ctrl.player, [
+                x("mesh", {
+                    geometry : {
+                        type : "box",
+                        width : 2,
+                        height : 5,
+                        depth : 2
+                    },
+                    material : {
+                        type : "lambert",
+                        color : 0x0000FF
+                    }
+                }),
+                x("camera", ctrl.camera),
+                x("light.point", {
+                    x : 0,
+                    y : 1
+                })
+            ]),
+            x("object", map.render(ctrl.map)),
             x("object", ctrl.boxes.map(function(box) {
                 return x("mesh", box);
-            })),
-            x("mesh", {
-                y: 10,
-                geometry : {
-                    type : "box",
-                    width : 100,
-                    height : 50,
-                    depth : 100
-                },
-                material : {
-                    type : "lambert",
-                    color: 0x0000FF,
-                    side : 1
-                }
-            })
+            }))
         ]);
     }
 });
