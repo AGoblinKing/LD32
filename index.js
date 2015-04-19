@@ -1,11 +1,13 @@
 var x = require("../xule"),
     g = x.logic,
     a = require("./game/microphone"),
+    tones = require("./game/tones"),
     map = require("./game/map");
 
 function makeBox(player) {
     // copy the position and rotation from cam
     var box = g.copy([ g.defs.vector, g.defs.euler ], {
+        _type : "projectile",
         geometry : {
             type : "box",
             width : 1,
@@ -21,6 +23,7 @@ function makeBox(player) {
 
     // move it forward one!
     g.translateOnAxis(box, g.axisZ, -2);
+    tones.play("c", 3);
     return box;
 }
 
@@ -71,7 +74,7 @@ x.xule(document.body, {
     },
     step : function(ctrl, delta) {
         // negate ctrl.pos
-        var prev = g.copy(g..vector, g.pos(), ctrl.player);
+        var prev = g.copy(g.defs.vector, g.pos(), ctrl.player);
         ctrl.pos = g.copy(g.defs.vector, ctrl.pos, g.defs.vector);
 
         g.doKey(ctrl.controls);
@@ -79,9 +82,6 @@ x.xule(document.body, {
         ctrl.pos.z && g.translateOnAxis(ctrl.player, g.axisZ, ctrl.pos.z);
         ctrl.pos.x && g.translateOnAxis(ctrl.player, g.axisX, ctrl.pos.x);
 
-        // bind the camera x/z to the player.
-        ctrl.camera.x += ctrl.player.x - prev.x;
-        ctrl.camera.z += ctrl.player.z - prev.z;
 
         // calc mouse pos compared to center
         ctrl.player.ry = Math.atan(g.mouse.y/g.mouse.x) + (g.mouse.x < 0 ? -180*Math.PI/180 : 0) - 40 *Math.PI/180;
@@ -93,12 +93,16 @@ x.xule(document.body, {
             return box.ttl > 0;
         });
 
-        if(ctrl.map.collide(ctrl.player)) {
-            ctrl.pos.z && g.translateOnAxis(ctrl.player, g.axisZ, -ctrl.pos.z);
-            ctrl.pos.x && g.translateOnAxis(ctrl.player, g.axisX, -ctrl.pos.x);
+        if(map.collide(ctrl.player)) {
+            ctrl.pos.z && g.translateOnAxis(ctrl.player, g.axisZ, -ctrl.pos.z * 2);
+            ctrl.pos.x && g.translateOnAxis(ctrl.player, g.axisX, -ctrl.pos.x * 2);
         }
+        // bind the camera x/z to the player.
+        ctrl.camera.x += ctrl.player.x - prev.x;
+        ctrl.camera.z += ctrl.player.z - prev.z;
 
-        ctrl.map.collide(ctrl.boxes);
+
+        map.collide(ctrl.boxes);
     },
     render : function(ctrl) {
         // map changes from data back
@@ -133,8 +137,7 @@ x.xule(document.body, {
             x("object", map.render(ctrl.map)),
             x("object", ctrl.boxes.map(function(box) {
                 return x("mesh", box);
-            })),
-            x("light.ambient", { color : 0x111111 })
+            }))
         ]);
     }
 });
