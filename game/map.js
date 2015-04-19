@@ -4,6 +4,7 @@ var x = require("../../xule"),
     size = 10,
     data = [],
     w, h,
+    hex = "0123456789ABCDEF".split(""),
     cube = {
         type : "box",
         width : size,
@@ -20,12 +21,16 @@ var x = require("../../xule"),
                 geometry : cube,
                 material : {
                     type : "lambert",
-                    color : 0x00FF00
+                    color : randHex()
                 }
             };
         }
     },
     baseBlock;
+
+function randHex() {
+    return Math.parseInt([hex[g.r(0, 5), hex[g.r(0, 5)], hex[g.r(0, 5)], hex[g.r(0, 5), "FF"].join(""), 16);
+}
 
 function makeBlock(type, x, y) {
     switch(type) {

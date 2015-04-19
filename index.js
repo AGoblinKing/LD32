@@ -59,9 +59,9 @@ x.xule(document.body, {
         ctrl.pos = g.pos();
         ctrl.controls = {
             W : g.fn(addAssign, "z", ctrl.pos, -ctrl.player.speed),
-            A : g.fn(addAssign, "x", ctrl.pos, -ctrl.player.speed),
+            A : g.fn(addAssign, "x", ctrl.pos, -ctrl.player.speed/2),
             S : g.fn(addAssign, "z", ctrl.pos, ctrl.player.speed),
-            D : g.fn(addAssign, "x", ctrl.pos, ctrl.player.speed)
+            D : g.fn(addAssign, "x", ctrl.pos, ctrl.player.speed/2)
         };
     },
     fixedStep : function(ctrl) {
@@ -71,7 +71,7 @@ x.xule(document.body, {
     },
     step : function(ctrl, delta) {
         // negate ctrl.pos
-        var prev = g.copy(g.defs.vector, g.pos(), ctrl.player);
+        var prev = g.copy(g..vector, g.pos(), ctrl.player);
         ctrl.pos = g.copy(g.defs.vector, ctrl.pos, g.defs.vector);
 
         g.doKey(ctrl.controls);
@@ -92,6 +92,13 @@ x.xule(document.body, {
 
             return box.ttl > 0;
         });
+
+        if(ctrl.map.collide(ctrl.player)) {
+            ctrl.pos.z && g.translateOnAxis(ctrl.player, g.axisZ, -ctrl.pos.z);
+            ctrl.pos.x && g.translateOnAxis(ctrl.player, g.axisX, -ctrl.pos.x);
+        }
+
+        ctrl.map.collide(ctrl.boxes);
     },
     render : function(ctrl) {
         // map changes from data back
