@@ -16,15 +16,14 @@ function makeBox(cam) {
             depth : 1
         },
         material : {
-            type : "lambert",
+            type : "basic",
             color: 0xFF0000
         },
-        ttl : 2000
+        ttl : 4000
     }, cam);
-    console.log(box);
 
     // move it forward one!
-    g.translateOnAxis(box, g.axisZ, 1);
+    g.translateOnAxis(box, g.axisZ, -2);
     return box;
 }
 
@@ -33,7 +32,7 @@ function addAssign(prop, target, add) {
     target[prop] = target[prop] + add;
 }
 
-x.game(document.body, {
+x.xule(document.body, {
     controller : function() {
         var ctrl = this;
 
@@ -45,7 +44,9 @@ x.game(document.body, {
             W : g.fn(addAssign, "z", ctrl.pos, -ctrl.camera.speed),
             A : g.fn(addAssign, "x", ctrl.pos, -ctrl.camera.speed),
             S : g.fn(addAssign, "z", ctrl.pos, ctrl.camera.speed),
-            D : g.fn(addAssign, "x", ctrl.pos, ctrl.camera.speed)
+            D : g.fn(addAssign, "x", ctrl.pos, ctrl.camera.speed),
+            Q : g.fn(addAssign, "ry", ctrl.camera, .05),
+            E : g.fn(addAssign, "ry", ctrl.camera, -.05)
         };
     },
     fixedStep : function(ctrl) {
@@ -63,9 +64,9 @@ x.game(document.body, {
 
         ctrl.boxes = ctrl.boxes.filter(function(box) {
             box.ttl -= delta;
-            g.translateOnAxis(box, g.axisZ, 1);
+            g.translateOnAxis(box, g.axisZ, -1);
 
-            return box.ttl;
+            return box.ttl > 0;
         });
     },
     render : function(ctrl) {

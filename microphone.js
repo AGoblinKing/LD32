@@ -28,7 +28,7 @@ function analyse() {
 
     for(var i = 0; i < bufferLength; i++) {
         var v = dataArray[i]; // Seems like "quiet" is 128
-        if(v > 150 || v < 90 ) {
+        if(v > 145) {
             pew = true; // I think there was a pew
         }
     }
