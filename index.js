@@ -28,6 +28,11 @@ function makeBox(cam) {
     return box;
 }
 
+// wish I could pass operators like +=
+function addAssign(prop, target, add) {
+    target[prop] = target[prop] + add;
+}
+
 x.game(document.body, {
     controller : function() {
         var ctrl = this;
@@ -37,10 +42,10 @@ x.game(document.body, {
 
         ctrl.pos = g.pos();
         ctrl.controls = {
-            W : g.fn(g.add, ctrl.pos.z, -ctrl.camera.speed),
-            A : g.fn(g.add, ctrl.pos.x, -ctrl.camera.speed),
-            S : g.fn(g.add, ctrl.pos.z, ctrl.camera.speed),
-            D : g.fn(g.add, ctrl.pos.x, ctrl.camera.speed)
+            W : g.fn(addAssign, "z", ctrl.pos, -ctrl.camera.speed),
+            A : g.fn(addAssign, "x", ctrl.pos, -ctrl.camera.speed),
+            S : g.fn(addAssign, "z", ctrl.pos, ctrl.camera.speed),
+            D : g.fn(addAssign, "x", ctrl.pos, ctrl.camera.speed)
         };
     },
     fixedStep : function(ctrl) {
@@ -53,8 +58,8 @@ x.game(document.body, {
         ctrl.pos = g.copy(g.defs.vector, ctrl.pos, g.defs.vector);
         g.doKey(ctrl.controls);
 
-        pos.z && g.translateOnAxis(ctrl.camera, g.axisZ, ctrl.pos.z);
-        pos.x && g.translateOnAxis(ctrl.camera, g.axisX, ctrl.pos.x);
+        ctrl.pos.z && g.translateOnAxis(ctrl.camera, g.axisZ, ctrl.pos.z);
+        ctrl.pos.x && g.translateOnAxis(ctrl.camera, g.axisX, ctrl.pos.x);
 
         ctrl.boxes = ctrl.boxes.filter(function(box) {
             box.ttl -= delta;
