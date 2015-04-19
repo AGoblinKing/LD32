@@ -79,7 +79,7 @@ function makeBlock(type, x, y) {
 }
 
 function playRandom() {
-    tones.play(Object.keys(tones.map[0])[g.r(0, 16)], 4);
+    tones.play(Object.keys(tones.map[0])[g.r(0, 16)], 1);
 }
 var map = module.exports = function(mData) {
     mData = mData.split("n");
