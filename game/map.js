@@ -20,10 +20,11 @@ var x = require("../../xule"),
                 receiveShadow : true,
                 x: x * size,
                 z: y * size,
+                i : map.toIndex(x, y),
                 geometry : cube,
                 material : {
                     type : "lambert",
-                    color : randHex()
+                    color : randHex("FFRRRR")
                 }
             };
         },
@@ -35,36 +36,48 @@ var x = require("../../xule"),
                 x: x * size,
                 z: y * size,
                 y: -size,
+                i : map.toIndex(x, y),
                 geometry : cube,
                 material : {
                     type : "lambert",
-                    color : randHex()
+                    color : randHex("FFRRRR")
                 }
             };
         }
     },
     baseBlock;
 
-function randHex() {
-    return parseInt([hex[g.r(0, 9)], hex[g.r(0, 9)], hex[g.r(0, 9)], hex[g.r(0, 9)], "FF"].join(""), 16);
+function randHex(rand) {
+    return parseInt(rand.split("").map(function(i) {
+        return i === "R" ? hex[g.r(0, 9)] : i;
+    }).join(""), 16);
 }
 
 function isHit(target) {
-    var i = map.toIndex(Math.floor((target.x + size/2) / size  ), Math.floor((target.z + size/2)/ size)),
+    var i = map.gToIndex(target.x, target.z),
         hit = data[i];
+
 
     if(!hit) { return false; }
 
     if(hit._type === "solid" && target._type === "projectile") {
         tones.play("c#", 4);
-        hit.material.color = randHex();
+        hit.material.color = randHex("RRRRFF");
         target.ttl = 0;
     }
-    if(!target._type && hit._type === "below" && target.i !== i) {
-        hit.material.color = randHex();
-        target.i = i;
-        playRandom();
+    if(target._type !== "projectile" && hit._type === "below" && target.i !== i) {
+        switch(target._type) {
+            case "frog":
+                tones.play(g.ra(["f", "g", "e"]), 3);
+                hit.material.color = randHex("RRFFRR");
+                break;
+            default:
+                hit.material.color = randHex("RRRRFF");
+                tones.play("c", 2);
+        }
+
     }
+    target.i = i;
     return hit._type === "solid";
 }
 
@@ -79,7 +92,7 @@ function makeBlock(type, x, y) {
 }
 
 function playRandom() {
-    tones.play(Object.keys(tones.map[0])[g.r(0, 16)], 1);
+    tones.play(Object.keys(tones.map[0])[g.r(0, 16)], 2);
 }
 var map = module.exports = function(mData) {
     mData = mData.split("n");
@@ -95,6 +108,8 @@ var map = module.exports = function(mData) {
     return data;
 }
 
+map.data = data;
+
 map.toCoord = function(i) {
     return {
         x : i % w,
@@ -104,6 +119,10 @@ map.toCoord = function(i) {
 
 map.toIndex = function(x, y) {
     return (y * w) + x;
+};
+
+map.gToIndex = function(x, y){
+    return map.toIndex(Math.floor((x + size/2) / size), Math.floor((y + size/2)/ size))
 };
 
 map.collide = function(targets) {

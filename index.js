@@ -2,7 +2,8 @@ var x = require("../xule"),
     g = x.logic,
     a = require("./game/microphone"),
     tones = require("./game/tones"),
-    map = require("./game/map");
+    map = require("./game/map"),
+    frog = require("./game/frog");
 
 function makeBox(player) {
     // copy the position and rotation from cam
@@ -16,7 +17,7 @@ function makeBox(player) {
         },
         material : {
             type : "lambert",
-            color: 0xFF0000
+            color: 0xFFFFFF
         },
         ttl : 4000
     }, player);
@@ -38,7 +39,9 @@ x.xule(document.body, {
 
         ctrl.map = map(require("./resources/mdata"));
         ctrl.boxes = [];
-
+        //setup
+        frog.controller(ctrl);
+        frog.add(5);
         ctrl.camera = g.quaternion({
             fov : 45,
             y : 80,
@@ -73,6 +76,7 @@ x.xule(document.body, {
         }
     },
     step : function(ctrl, delta) {
+        frog.step(ctrl, delta);
         // negate ctrl.pos
         var prev = g.copy(g.defs.vector, g.pos(), ctrl.player);
         ctrl.pos = g.copy(g.defs.vector, ctrl.pos, g.defs.vector);
@@ -101,7 +105,7 @@ x.xule(document.body, {
         ctrl.camera.x += ctrl.player.x - prev.x;
         ctrl.camera.z += ctrl.player.z - prev.z;
 
-
+        frog.collide(ctrl.boxes);
         map.collide(ctrl.boxes);
     },
     render : function(ctrl) {
@@ -121,8 +125,23 @@ x.xule(document.body, {
                     },
                     castShadow : true
                 }),
+                x("mesh", {
+                    y : 5,
+                    geometry : {
+                        type : "box",
+                        width : 1,
+                        height : 2,
+                        depth : 1
+                    },
+                    material : {
+                        type : "lambert",
+                        color : 0x0000FF
+                    },
+                    castShadow : true
+                }),
                 x("light.spot", ctrl.spot)
             ]),
+            x("object", frog.render()),
             x("light.directional", {
                 castShadow : true,
                 shadowCameraNear : 1200,
