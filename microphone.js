@@ -1,31 +1,39 @@
 "use strict";
+navigator.getUserMedia = navigator.getUserMedia ||
+                         navigator.webkitGetUserMedia ||
+                         navigator.mozGetUserMedia;
 
-var audioCtx = new (window.AudioContext || window.webkitAudioContext)(),
+var audioCtx = (new (window.AudioContext || window.webkitAudioContext)()),
     analyser = audioCtx.createAnalyser(),
-    actions : {
+    actions = {
         spike : function() {}
     },
     source,
-    navigator.getUserMedia({ audio : true }, function(stream) {
-        source = audioCtx.createMediaStreamSource(stream);
-        source.connect(analyser);
-        anaylser.fftSize = 512;
-    }),
-    n = 0,
     mode = "silent";
 
+navigator.getUserMedia({ audio : true }, function(stream) {
+    source = audioCtx.createMediaStreamSource(stream);
+    source.connect(analyser);
+    analyser.fftSize = 512;
+}, function(err) {
+    console.log("you suck", err);
+});
 
 function analyse() {
     var bufferLength = analyser.frequencyBinCount,
-        dataArray = new Uint8Array(bufferLength);
+        dataArray = new Uint8Array(bufferLength),
+        pew = false;
 
-    anaylser.getByteTimeDomainData(dataArray);
+    analyser.getByteTimeDomainData(dataArray);
 
     for(var i = 0; i < bufferLength; i++) {
-        var v = dataArray[i] / 128.0;
-        console.log(n, v);
+        var v = dataArray[i]; // Seems like "quiet" is 128
+        if(v > 150 || v < 90 ) {
+            pew = true; // I think there was a pew
+        }
     }
-    n++;
+
+    return pew;
 }
 
 
@@ -34,5 +42,5 @@ var data = module.exports = {
     on : function(type, cb) {
         actions[type] = cb;
     },
-    anaylse : anaylse
+    analyse : analyse
 };

@@ -6,43 +6,62 @@ function r(min, max) {
     return Math.round(min + Math.random() * (max-min));
 }
 
+function makeBox(cam) {
+    // copy the position and rotation from cam
+    var box = g.copy([ g.defs.vector, g.defs.euler ], {
+        geometry : {
+            type : "box",
+            width : 1,
+            height : 1,
+            depth : 1
+        },
+        material : {
+            type : "lambert",
+            color: 0xFF0000
+        },
+        ttl : 2000
+    }, cam);
+    console.log(box);
+
+    // move it forward one!
+    g.translateOnAxis(box, g.axisZ, 1);
+    return box;
+}
+
 x.game(document.body, {
-    //renderer
-    //scene
     controller : function() {
         var ctrl = this;
 
         ctrl.camera = g.pos(g.euler({aspect : window.innerWidth / window.innerHeight, speed : .5 }));
+        ctrl.boxes = [];
+
+        ctrl.pos = g.pos();
+        ctrl.controls = {
+            W : g.fn(g.add, ctrl.pos.z, -ctrl.camera.speed),
+            A : g.fn(g.add, ctrl.pos.x, -ctrl.camera.speed),
+            S : g.fn(g.add, ctrl.pos.z, ctrl.camera.speed),
+            D : g.fn(g.add, ctrl.pos.x, ctrl.camera.speed)
+        };
     },
     fixedStep : function(ctrl) {
-        console.log(a.analyze());
+        if(a.analyse()) {
+            ctrl.boxes.push(makeBox(ctrl.camera));
+        }
     },
-    // stepLocal, stepRemote
     step : function(ctrl, delta) {
-        var pos = g.pos({});
+        // negate ctrl.pos
+        ctrl.pos = g.copy(g.defs.vector, ctrl.pos, g.defs.vector);
+        g.doKey(ctrl.controls);
 
-        if(x.key("W")) {
-            pos.z -= ctrl.camera.speed;
-        }
-        if(x.key("A")) {
-            pos.x -= ctrl.camera.speed;
-        }
-        if(x.key("S")) {
-            pos.z += ctrl.camera.speed;
-        }
-        if(x.key("D")) {
-            pos.x += ctrl.camera.speed;
-        }
+        pos.z && g.translateOnAxis(ctrl.camera, g.axisZ, ctrl.pos.z);
+        pos.x && g.translateOnAxis(ctrl.camera, g.axisX, ctrl.pos.x);
 
-        pos.z && g.translateOnAxis(ctrl.camera, g.axisZ, pos.z);
-        pos.x && g.translateOnAxis(ctrl.camera, g.axisX, pos.x);
+        ctrl.boxes = ctrl.boxes.filter(function(box) {
+            box.ttl -= delta;
+            g.translateOnAxis(box, g.axisZ, 1);
 
-        if(x.key("Q")) {
-            ctrl.camera.ry += .01;
-        }
-        if(x.key("E")) {
-            ctrl.camera.ry -= .01;
-        }
+            return box.ttl;
+        });
     },
     render : function(ctrl) {
         // map changes from data back
@@ -52,6 +71,9 @@ x.game(document.body, {
                 x : 5,
                 y : 10
             }),
+            x("object", ctrl.boxes.map(function(box) {
+                return x("mesh", box);
+            })),
             x("mesh", {
                 y: 10,
                 geometry : {
